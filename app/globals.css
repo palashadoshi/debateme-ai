@@ -1,45 +1,158 @@
-/* Day 1: layout only. Ethereal space theme + pixel font arrive on Day 2. */
+/* Ethereal space theme: purple/blue nebula, glitter, white/silver/gold accents. */
 
 :root {
-  --bg: #0a0a0f;
   --fg: #f2f2f5;
-  --line: #f2f2f5;
-  --green: #22b14c;
-  --yellow: #f5d400;
-  --red: #ed2024;
+  --line: rgba(242, 242, 245, 0.9);
+  /* difficulty accents */
+  --white: #ffffff;
+  --silver: #a7b0ba;
+  --gold: #e3b648;
+  /* only used for the over-the-word-limit warning */
+  --warn: #e2706d;
 }
 
 * {
   box-sizing: border-box;
 }
 
-html,
+/* Background lives on html so the nebula and glitter layers can sit above it */
+html {
+  background: #000;
+}
+
 body {
   margin: 0;
-  min-height: 100%;
-  background: var(--bg);
+  min-height: 100vh;
   color: var(--fg);
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-pixel), system-ui, sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+/* Nebula: purple, blue, and a rosy/teal haze (25% stronger, 25% faster) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 45% 38% at 20% 26%,
+      rgba(150, 90, 255, 0.28),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 42% 46% at 80% 74%,
+      rgba(70, 130, 255, 0.26),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 30% 26% at 64% 14%,
+      rgba(225, 120, 205, 0.18),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 34% 28% at 30% 85%,
+      rgba(80, 200, 215, 0.14),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 50% 50%,
+      rgba(200, 200, 230, 0.07),
+      transparent 75%
+    );
+  filter: blur(30px);
+  animation: drift 56s ease-in-out infinite alternate;
+}
+
+/* Glitter: two layers of tiny stars that twinkle out of sync */
+body::after,
+html::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+body::after {
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, #fff, transparent),
+    radial-gradient(1px 1px at 27% 72%, #d8c8ff, transparent),
+    radial-gradient(2px 2px at 44% 33%, #fff, transparent),
+    radial-gradient(1px 1px at 63% 81%, #bcd6ff, transparent),
+    radial-gradient(1.5px 1.5px at 78% 22%, #e6d4ff, transparent),
+    radial-gradient(1px 1px at 91% 58%, #fff, transparent),
+    radial-gradient(1px 1px at 8% 90%, #bcd6ff, transparent),
+    radial-gradient(2px 2px at 55% 8%, #fff, transparent),
+    radial-gradient(1px 1px at 95% 12%, #d8c8ff, transparent),
+    radial-gradient(1.5px 1.5px at 36% 55%, #fff, transparent);
+  animation: twinkle 4s ease-in-out infinite alternate;
+}
+
+html::before {
+  background-image:
+    radial-gradient(1px 1px at 5% 40%, #fff, transparent),
+    radial-gradient(2px 2px at 19% 8%, #e6d4ff, transparent),
+    radial-gradient(1px 1px at 33% 92%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 49% 66%, #bcd6ff, transparent),
+    radial-gradient(1px 1px at 68% 44%, #fff, transparent),
+    radial-gradient(2px 2px at 84% 88%, #d8c8ff, transparent),
+    radial-gradient(1px 1px at 72% 6%, #bcd6ff, transparent),
+    radial-gradient(1.5px 1.5px at 97% 36%, #fff, transparent),
+    radial-gradient(1px 1px at 15% 62%, #fff, transparent),
+    radial-gradient(1px 1px at 58% 28%, #e6d4ff, transparent);
+  animation: twinkle 5.5s ease-in-out -2s infinite alternate;
+}
+
+@keyframes drift {
+  from {
+    transform: translate(-2%, -1%) scale(1);
+  }
+  to {
+    transform: translate(2%, 2%) scale(1.08);
+  }
+}
+
+@keyframes twinkle {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after,
+  html::before {
+    animation: none;
+  }
 }
 
 .frame {
-  --accent: var(--green);
+  --accent: var(--white);
   display: grid;
   grid-template-columns: 1fr 1fr;
   max-width: 1100px;
   min-height: 560px;
   margin: 40px auto;
   border: 3px solid var(--line);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 50px rgba(170, 130, 255, 0.16);
 }
 
 .frame[data-difficulty="easy"] {
-  --accent: var(--green);
+  --accent: var(--white);
 }
 .frame[data-difficulty="medium"] {
-  --accent: var(--yellow);
+  --accent: var(--silver);
 }
 .frame[data-difficulty="hard"] {
-  --accent: var(--red);
+  --accent: var(--gold);
 }
 
 .panel {
@@ -60,34 +173,46 @@ body {
 }
 
 .diff {
-  padding: 6px 18px;
+  padding: 4px 18px;
   background: transparent;
   border: 3px solid;
   color: inherit;
   font: inherit;
   text-transform: capitalize;
   cursor: pointer;
+  transition:
+    box-shadow 0.2s,
+    background 0.2s;
 }
 
 .diff-easy {
-  border-color: var(--green);
+  border-color: var(--white);
 }
 .diff-medium {
-  border-color: var(--yellow);
+  border-color: var(--silver);
 }
 .diff-hard {
-  border-color: var(--red);
+  border-color: var(--gold);
 }
 
 .diff-easy.active {
-  background: var(--green);
+  background: var(--white);
+  color: #000;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.62);
 }
 .diff-medium.active {
-  background: var(--yellow);
-  color: #000;
+  background: var(--silver);
+  color: #0c0d12;
+  box-shadow: 0 0 20px rgba(167, 176, 186, 0.62);
 }
 .diff-hard.active {
-  background: var(--red);
+  background: var(--gold);
+  color: #1a1200;
+  box-shadow: 0 0 20px rgba(227, 182, 72, 0.62);
+}
+
+.diff:hover:not(.active) {
+  box-shadow: 0 0 15px rgba(242, 242, 245, 0.38);
 }
 
 .diff:focus-visible,
@@ -97,32 +222,32 @@ body {
   outline-offset: 3px;
 }
 
-/* Prompt + score boxes */
+/* Prompt + score boxes follow the difficulty color */
 .box {
   border: 3px solid var(--accent);
   padding: 16px 20px;
+  box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 38%, transparent);
   transition:
     border-color 0.2s,
-    color 0.2s;
+    color 0.2s,
+    box-shadow 0.2s;
 }
 
 .box h2 {
   margin: 0 0 8px;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
   color: var(--accent);
 }
 
-.prompt-box {
-  min-height: 150px;
-}
-
+.prompt-box,
 .score-box {
   min-height: 150px;
 }
 
 .score {
   margin: 0;
-  font-size: 1.6rem;
+  font-size: 2rem;
   color: var(--accent);
 }
 
@@ -141,12 +266,13 @@ body {
   min-height: 360px;
   resize: none;
   padding: 24px;
-  background: transparent;
+  background: rgba(0, 0, 0, 0.35);
   color: var(--fg);
   border: 3px solid var(--line);
   border-radius: 40px;
   font: inherit;
-  line-height: 1.6;
+  line-height: 1.7;
+  box-shadow: 0 0 30px rgba(150, 170, 255, 0.2);
 }
 
 .meta {
@@ -156,21 +282,24 @@ body {
 }
 
 .over {
-  color: var(--red);
+  color: var(--warn);
 }
 
 .submit {
-  padding: 8px 22px;
+  padding: 6px 24px;
   background: var(--fg);
   color: #000;
   border: 0;
   font: inherit;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.44);
 }
 
 .submit:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* Stack panels on phones */
