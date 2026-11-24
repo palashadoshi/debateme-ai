@@ -1,26 +1,186 @@
-@import "tailwindcss";
+/* Day 1: layout only. Ethereal space theme + pixel font arrive on Day 2. */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0a0a0f;
+  --fg: #f2f2f5;
+  --line: #f2f2f5;
+  --green: #22b14c;
+  --yellow: #f5d400;
+  --red: #ed2024;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, sans-serif;
+}
+
+.frame {
+  --accent: var(--green);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 1100px;
+  min-height: 560px;
+  margin: 40px auto;
+  border: 3px solid var(--line);
+}
+
+.frame[data-difficulty="easy"] {
+  --accent: var(--green);
+}
+.frame[data-difficulty="medium"] {
+  --accent: var(--yellow);
+}
+.frame[data-difficulty="hard"] {
+  --accent: var(--red);
+}
+
+.panel {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.left {
+  border-right: 3px solid var(--line);
+}
+
+/* Difficulty buttons */
+.difficulty {
+  display: flex;
+  gap: 16px;
+}
+
+.diff {
+  padding: 6px 18px;
+  background: transparent;
+  border: 3px solid;
+  color: inherit;
+  font: inherit;
+  text-transform: capitalize;
+  cursor: pointer;
+}
+
+.diff-easy {
+  border-color: var(--green);
+}
+.diff-medium {
+  border-color: var(--yellow);
+}
+.diff-hard {
+  border-color: var(--red);
+}
+
+.diff-easy.active {
+  background: var(--green);
+}
+.diff-medium.active {
+  background: var(--yellow);
+  color: #000;
+}
+.diff-hard.active {
+  background: var(--red);
+}
+
+.diff:focus-visible,
+.submit:focus-visible,
+.cer:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+/* Prompt + score boxes */
+.box {
+  border: 3px solid var(--accent);
+  padding: 16px 20px;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
+}
+
+.box h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  color: var(--accent);
+}
+
+.prompt-box {
+  min-height: 150px;
+}
+
+.score-box {
+  min-height: 150px;
+}
+
+.score {
+  margin: 0;
+  font-size: 1.6rem;
+  color: var(--accent);
+}
+
+.tips {
+  margin: 8px 0 0;
+  color: var(--accent);
+}
+
+/* Right panel */
+.right {
+  gap: 12px;
+}
+
+.cer {
+  flex: 1;
+  min-height: 360px;
+  resize: none;
+  padding: 24px;
+  background: transparent;
+  color: var(--fg);
+  border: 3px solid var(--line);
+  border-radius: 40px;
+  font: inherit;
+  line-height: 1.6;
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.over {
+  color: var(--red);
+}
+
+.submit {
+  padding: 8px 22px;
+  background: var(--fg);
+  color: #000;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Stack panels on phones */
+@media (max-width: 720px) {
+  .frame {
+    grid-template-columns: 1fr;
+    margin: 12px;
+  }
+  .left {
+    border-right: 0;
+    border-bottom: 3px solid var(--line);
+  }
 }
