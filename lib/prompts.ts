@@ -1,4 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
+import { GEMINI_TIMEOUT_MS, withTimeout } from "@/lib/withTimeout";
 
 // The "day" flips at midnight in this timezone (not UTC).
 const TIMEZONE = "America/Chicago";
@@ -68,18 +69,27 @@ export async function generatePrompt(
     const avoid = recent.length
       ? `Do not repeat or closely resemble these recent prompts:\n- ${recent.join("\n- ")}`
       : "";
-    const response = await ai.models.generateContent({
+    const started = Date.now();
+    const request = ai.models.generateContent({
       // Model names change over time. Set GEMINI_MODEL in .env.local to switch
       // without touching code.
-      model: process.env.GEMINI_MODEL || "gemini-3.5-flash",
+      model: process.env.GEMINI_MODEL || "gemini-3.6-flash",
       contents: `Write today's prompt. ${avoid}`,
       config: {
         systemInstruction: SYSTEM,
-        // Generous on purpose: newer Gemini models can spend part of this
-        // limit "thinking" before they write the answer.
-        maxOutputTokens: 1024,
+        // "Low" thinking keeps this short task fast and cheap.
+        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+        // Generous on purpose: thinking tokens count toward this limit.
+        maxOutputTokens: 2048,
       },
     });
+    request.catch(() => {}); // avoid an unhandled error if the timeout wins
+    const response = await withTimeout(
+      request,
+      GEMINI_TIMEOUT_MS,
+      "Gemini prompt",
+    );
+    console.log(`Gemini prompt took ${Date.now() - started} ms`);
     const text = (response.text ?? "")
       .trim()
       .replace(/^["\u201c]|["\u201d]$/g, "");

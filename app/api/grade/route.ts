@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { findTodayPrompt, getOrCreateTodayPrompt } from "@/lib/dailyPrompt";
 import { GUEST_COOKIE, getIdentity } from "@/lib/identity";
 import { gradeResponse } from "@/lib/grader";
+import { waitForGraderTurn } from "@/lib/queue";
 import {
   MAX_CHARS,
   MIN_WORDS,
@@ -159,8 +160,19 @@ export async function POST(request: Request) {
     }
     const rowId = reserved.data.id;
 
-    // 4. Grade it. If grading fails, give the try back.
+    // 4. Wait in line (one grading every few seconds keeps us under the AI
+    //    provider's per-minute limit), then grade it. If either step fails,
+    //    give the try back.
     try {
+      const gotTurn = await waitForGraderTurn();
+      if (!gotTurn) {
+        await admin.from("submissions").delete().eq("id", rowId);
+        return fail(
+          503,
+          "Lots of players are grading right now. Please try again in a minute. Your try wasn't used.",
+        );
+      }
+
       const grade = await gradeResponse(prompt.text, text, difficulty);
       const tipsText = grade.tips.join("\n");
       const saved = await admin

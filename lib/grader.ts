@@ -1,4 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
+import { GEMINI_TIMEOUT_MS, withTimeout } from "@/lib/withTimeout";
 import { countWords, type Difficulty } from "@/lib/limits";
 
 export type Grade = {
@@ -37,18 +38,27 @@ async function geminiGrade(
   // Stop students from closing the tag early to break out of it.
   const safe = studentText.replaceAll("</student_response>", "");
 
-  const response = await ai.models.generateContent({
-    model: process.env.GEMINI_MODEL || "gemini-3.5-flash",
+  const started = Date.now();
+  const request = ai.models.generateContent({
+    model: process.env.GEMINI_MODEL || "gemini-3.6-flash",
     contents: `Debate prompt: ${promptText}\n\n<student_response>\n${safe}\n</student_response>`,
     config: {
       systemInstruction: systemPrompt(difficulty),
       responseMimeType: "application/json",
-      temperature: 0.3,
-      // Generous on purpose: newer Gemini models can spend part of this
-      // limit "thinking" before they write the answer.
-      maxOutputTokens: 1024,
+      // Gemini 3.6 and newer reject temperature, top_p, and top_k, so none
+      // are set here. "Low" thinking keeps grading fast and cheap.
+      thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+      // Generous on purpose: thinking tokens count toward this limit.
+      maxOutputTokens: 2048,
     },
   });
+  request.catch(() => {}); // avoid an unhandled error if the timeout wins
+  const response = await withTimeout(
+    request,
+    GEMINI_TIMEOUT_MS,
+    "Gemini grading",
+  );
+  console.log(`Gemini grading took ${Date.now() - started} ms`);
 
   const parsed = JSON.parse(response.text ?? "");
   const score = Math.round(Number(parsed.score));

@@ -248,8 +248,9 @@ html::before {
 
 .prompt-box,
 .score-box {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 150px;
+  overflow-wrap: break-word;
 }
 
 .score {
@@ -578,4 +579,144 @@ html::before {
 .cer[readonly] {
   cursor: default;
   opacity: 0.9;
+}
+
+/* ---------- Day 6 and 7 (paste at the bottom of globals.css) ---------- */
+
+/* Voice input */
+.voice {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.mic-btn {
+  padding: 2px 16px;
+  background: transparent;
+  color: var(--fg);
+  border: 2px solid var(--line);
+  font: inherit;
+  cursor: pointer;
+}
+
+.mic-btn:hover:not(:disabled) {
+  background: var(--fg);
+  color: #000;
+}
+
+.mic-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mic-btn.on {
+  background: var(--gold);
+  color: #1a1200;
+  border-color: var(--gold);
+  animation: mic-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes mic-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 6px rgba(227, 182, 72, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(227, 182, 72, 0.95);
+  }
+}
+
+.mic-btn:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+.mic-time {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.interim {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mic-btn.on {
+    animation: none;
+    box-shadow: 0 0 16px rgba(227, 182, 72, 0.8);
+  }
+}
+
+/* Home page: title centered, tokens panel at the bottom */
+.home {
+  justify-content: flex-start;
+  gap: 0;
+}
+
+.home-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
+}
+
+.home-title.small {
+  font-size: clamp(1.8rem, 6vw, 3rem);
+}
+
+/* "Buy me some AI tokens" panel */
+.tokens {
+  width: min(620px, 100%);
+  margin-top: 24px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  text-align: left;
+  border: 3px solid var(--line);
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow: 0 0 24px rgba(170, 130, 255, 0.2);
+}
+
+.tokens-text {
+  margin: 0;
+  flex: 1 1 260px;
+  font-size: 0.9rem;
+}
+
+.tokens-btn {
+  display: inline-block;
+  padding: 4px 16px;
+  color: var(--gold);
+  border: 3px solid var(--gold);
+  text-decoration: none;
+  font-weight: 700;
+  box-shadow: 0 0 18px rgba(227, 182, 72, 0.4);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+a.tokens-btn:hover {
+  background: var(--gold);
+  color: #1a1200;
+}
+
+a.tokens-btn:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+.tokens-soon {
+  opacity: 0.55;
+  box-shadow: none;
+  cursor: default;
 }

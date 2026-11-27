@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   DIFFICULTIES,
@@ -9,8 +9,12 @@ import {
   countWords,
   type Difficulty,
 } from "@/lib/limits";
+import { useSpeechInput } from "@/lib/useSpeechInput";
 
 const STARTER = "My claim is...\nMy evidence is...\nMy reasoning is...";
+
+const formatTime = (s: number) =>
+  `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
 type Result = {
   score: number;
@@ -29,11 +33,34 @@ export default function Play() {
   const [result, setResult] = useState<Result | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [slow, setSlow] = useState(false);
 
   const locked = result !== null;
   const words = countWords(response);
   const overLimit = words > WORD_LIMIT;
   const tooShort = words < MIN_WORDS;
+
+  // Dictation: spoken text is added to the end of the response.
+  const appendDictation = useCallback((text: string) => {
+    setResponse((prev) => (prev.trimEnd() + " " + text.trim()).trim());
+  }, []);
+  const speech = useSpeechInput(appendDictation);
+  const { listening, stop: stopMic } = speech;
+
+  function toggleMic() {
+    if (listening) {
+      stopMic();
+      return;
+    }
+    // The starter text would clutter a spoken answer, so clear it if untouched.
+    if (response === STARTER) setResponse("");
+    speech.start();
+  }
+
+  // Turn the mic off when the response is submitted or hits the word limit.
+  useEffect(() => {
+    if (listening && (locked || words >= WORD_LIMIT)) stopMic();
+  }, [listening, locked, words, stopMic]);
 
   // Load today's prompt
   useEffect(() => {
@@ -70,6 +97,16 @@ export default function Play() {
       cancelled = true;
     };
   }, []);
+
+  // If grading takes a while, tell the player they are waiting in line.
+  useEffect(() => {
+    if (!submitting) return;
+    const id = setTimeout(() => setSlow(true), 8000);
+    return () => {
+      clearTimeout(id);
+      setSlow(false);
+    };
+  }, [submitting]);
 
   async function submit() {
     setError(null);
@@ -143,7 +180,9 @@ export default function Play() {
           {!result && (
             <p className="tips">
               {submitting
-                ? "Grading..."
+                ? slow
+                  ? "Lots of players are grading right now. You're in line, hang tight..."
+                  : "AI is thinking..."
                 : "Submit your response to get graded."}
             </p>
           )}
@@ -183,6 +222,41 @@ export default function Play() {
           aria-label="Write your claim, evidence, and reasoning"
           spellCheck
         />
+        {speech.support === "yes" && (
+          <div className="voice">
+            <button
+              type="button"
+              className={`mic-btn ${listening ? "on" : ""}`}
+              onClick={toggleMic}
+              aria-pressed={listening}
+              disabled={
+                locked || submitting || (!listening && speech.secondsLeft <= 0)
+              }
+            >
+              {listening ? "Stop mic" : "Start mic"}
+            </button>
+            <span className="mic-time">
+              {speech.secondsLeft > 0
+                ? `${formatTime(speech.secondsLeft)} mic time left`
+                : "Mic time used up. You can keep typing!"}
+            </span>
+          </div>
+        )}
+        {speech.support === "no" && (
+          <p className="note">
+            Voice input works in Chrome and Edge. You can still type your
+            response!
+          </p>
+        )}
+        {listening && speech.interim && (
+          <p className="interim">Hearing: {speech.interim}</p>
+        )}
+        {speech.error && (
+          <p className="error" role="alert">
+            {speech.error}
+          </p>
+        )}
+
         <div className="meta">
           <span className={overLimit ? "over" : ""}>
             {words} / {WORD_LIMIT} words
@@ -193,7 +267,7 @@ export default function Play() {
             onClick={submit}
             disabled={locked || submitting || overLimit || tooShort}
           >
-            {submitting ? "Grading..." : locked ? "Submitted" : "Submit"}
+            {submitting ? "AI is thinking..." : locked ? "Submitted" : "Submit"}
           </button>
         </div>
 
@@ -207,6 +281,11 @@ export default function Play() {
             {error}
           </p>
         )}
+        <p className="note">
+          Your response is sent to an AI service to be graded.
+          {speech.support === "yes" &&
+            " Voice input is handled by your browser's speech service."}
+        </p>
       </section>
     </main>
   );
